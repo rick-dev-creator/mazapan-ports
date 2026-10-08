@@ -1,0 +1,98 @@
+[plugin]
+id = "ports"
+name = "Ports"
+version = "0.1.0"
+api = 1
+description = "What's listening on your computer, by name: your servers with their project, containers, the system's. Is a port free (and the next one that is), stop what holds it for good, and a word when something of yours is open to the network"
+requires = ["shell-bar", "hypr-base"]
+categories = ["panel", "bar", "tools"]
+author = "RickDev"
+homepage = "https://github.com/rick-dev-creator/mazapan-ports"
+license = "MIT"
+
+# How it looks, for the plugin gallery (mazapan.dev/plugins).
+[gallery]
+icon = "media/icon.svg"
+screenshots = ["media/panel.webp", "media/free.webp", "media/light.webp"]
+
+# Python runs the helper (its own library only); iproute2's `ip` says which
+# addresses are a VPN's; wl-clipboard copies an address; xdg-utils opens
+# one in the browser; libnotify says what's open to the network.
+[packages]
+pacman = ["python", "iproute2", "wl-clipboard", "xdg-utils", "libnotify"]
+
+[settings]
+# Opens Ports.
+key = "SUPER + ALT + O"
+# How many servers and containers of yours are listening, in the bar (red while one is open to the network).
+bar = true
+# A notification, and a card in the Control Center, when a server or container of yours can be reached by anyone on your network.
+warn = true
+# The system's own listeners (root's, other users'), listed below yours. They're never stopped from here.
+system = true
+# UDP listeners too, not only TCP.
+udp = false
+# Ports never listed (DNS, printing, the network's name service).
+hidden = [53, 631, 5353, 5355]
+# How often it looks, in seconds, while the panel is closed (open, every 2.5).
+every = { default = 10, min = 5, max = 120, step = 5 }
+
+# The settings, read live by the shell.
+[[targets]]
+template = "settings.json.tmpl"
+output = "~/.config/quickshell/mazapan/components/ports/settings.json"
+
+# The helper: reads what's listening, says if a port is free, stops what holds it.
+[[targets]]
+template = "ports.py.tmpl"
+output = "~/.local/share/mazapan/bin/ports"
+
+[[targets]]
+template = "qmldir.tmpl"
+output = "~/.config/quickshell/mazapan/components/ports/qmldir"
+reload = "sh ~/.local/share/mazapan/bin/shell-reload"
+
+[[targets]]
+template = "PortsService.qml.tmpl"
+output = "~/.config/quickshell/mazapan/components/ports/PortsService.qml"
+reload = "sh ~/.local/share/mazapan/bin/shell-reload"
+
+[[targets]]
+template = "Panel.qml.tmpl"
+output = "~/.config/quickshell/mazapan/panels/ports.qml"
+reload = "sh ~/.local/share/mazapan/bin/shell-reload"
+
+[[targets]]
+template = "Bar.qml.tmpl"
+output = "~/.config/quickshell/mazapan/widgets/right/06-ports.qml"
+reload = "sh ~/.local/share/mazapan/bin/shell-reload"
+
+[[targets]]
+template = "Now.qml.tmpl"
+output = "~/.config/quickshell/mazapan/control/now/25-ports-open.qml"
+reload = "sh ~/.local/share/mazapan/bin/shell-reload"
+
+[[targets]]
+template = "ports.lua.tmpl"
+output = "~/.config/hypr/mazapan/ports.lua"
+reload = "hyprctl reload >/dev/null"
+
+[[actions]]
+name = "{{ t \"act.open\" }}"
+run = "qs ipc -c mazapan call mazapan panel ports"
+# On the palette's first screen, among the places.
+home = 38
+glyph = "󰒍"
+label = "{{ t \"title\" }}"
+key = "{{ settings.key }}"
+keywords = "{{ t \"act.open.kw\" }}"
+
+[[actions]]
+name = "{{ t \"act.list\" }}"
+run = "python3 -I ~/.local/share/mazapan/bin/ports list"
+terminal = true
+keywords = "{{ t \"act.list.kw\" }}"
+
+[[checks]]
+name = "{{ t \"check.helper\" }}"
+run = "python3 -I ~/.local/share/mazapan/bin/ports list >/dev/null"
